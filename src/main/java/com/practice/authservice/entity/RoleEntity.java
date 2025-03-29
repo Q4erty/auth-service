@@ -7,18 +7,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(schema = "s_auth", name = "t_user_authority")
+@Table(schema = "s_auth", name = "t_role")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRoleEntity {
+public class RoleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "c_authority", nullable = false)
-    private String role;
+    @Column(name = "c_authority", nullable = false, unique = true)
+    private String authority;
+
 
 }
