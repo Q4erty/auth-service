@@ -1,7 +1,7 @@
 package com.practice.authservice.configuration;
 
 import com.practice.authservice.jwt.JwtFilter;
-import com.practice.authservice.service.UserDetailsServiceImpl;
+import com.practice.authservice.service.impl.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/verify").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/user/**").hasAuthority("ROLE_USER")
                         .anyRequest().authenticated()

@@ -1,8 +1,9 @@
 package com.practice.authservice.controller;
 
-import com.practice.authservice.jwt.JwtUtil;
 import com.practice.authservice.dto.AuthRequest;
-import com.practice.authservice.service.UserService;
+import com.practice.authservice.jwt.JwtUtil;
+import com.practice.authservice.kafka.EmailVerificationProducer;
+import com.practice.authservice.service.impl.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,8 +25,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private final JwtUtil jwtUtil;
+    private final EmailVerificationProducer emailVerificationProducer;
 
     @Value("${jwt.access-token-expiration}")
     private long ACCESS_TOKEN_EXPIRATION;
@@ -68,8 +71,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Transactional
     public ResponseEntity<Map<String, String>> register(@RequestBody AuthRequest request, HttpServletResponse response) {
-        userService.register(request.username(), request.password());
+        userService.register(request.username(), request.email(), request.password());
+
+        emailVerificationProducer.sendEmailVerificationEvent(request.email());
+
         return login(request, response);
     }
 

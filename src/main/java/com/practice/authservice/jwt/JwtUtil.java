@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 
@@ -111,6 +113,24 @@ public class JwtUtil {
         }
 
         return null;
+    }
+
+    public String generateEmailVerificationToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("type", "email-verification")
+                .setIssuedAt(new Date())
+                .setExpiration(Date.from(Instant.now().plus(24, ChronoUnit.HOURS)))
+                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public Claims parseToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
 }

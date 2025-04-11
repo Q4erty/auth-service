@@ -19,6 +19,9 @@ spring:
     level:
       org.springframework.security: TRACE
 
+  kafka:
+    bootstrap-servers: ${GOOGLE_SERVER}:9092
+
 server:
   port: 8443
   ssl:

@@ -23,8 +23,14 @@ public class UserEntity {
     @Column(name = "c_username", nullable = false, unique = true)
     private String username;
 
+    @Column(name = "c_email", nullable = false, unique = true)
+    private String email;
+
     @Column(name = "c_password", nullable = false)
     private String password;
+
+    @Column(name = "c_is_verified", nullable = false)
+    private boolean isVerified;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
