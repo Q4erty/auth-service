@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +30,16 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public void register(String username, String email, String password) {
+    public void register(String username, String email, String role, String password) {
         if (userRepository.existsByEmail(email)) {
             throw new UsernameAlreadyExistsException("User already exists!");
         }
 
-        RoleEntity roleUser = roleRepository.findByAuthority("ROLE_USER")
+        RoleEntity roleUser = roleRepository.findByAuthority(role)
                 .orElseGet(() -> {
-                    log.warn("ROLE_USER not found, creating a new one.");
+                    log.warn("Role not found, creating a new one.");
                     RoleEntity newRole = new RoleEntity();
-                    newRole.setAuthority("ROLE_USER");
+                    newRole.setAuthority("ROLE_CLIENT");
                     return roleRepository.save(newRole);
                 });
 
@@ -51,11 +53,15 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    public void authenticate(String username, String password) {
+    public void authenticate(String email, String password) {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password)
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
             throw new BadCredentialsException("Invalid username or password");
         }
     }
+
 }

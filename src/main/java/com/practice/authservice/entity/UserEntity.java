@@ -9,7 +9,7 @@ import lombok.Setter;
 import java.util.Set;
 
 @Entity
-@Table(schema = "s_auth", name = "t_user")
+@Table(schema = "s_auth", name = "t_client")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,8 +35,8 @@ public class UserEntity {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             schema = "s_auth",
-            name = "t_user_role",
-            joinColumns = @JoinColumn(name = "id_user"),
+            name = "t_client_role",
+            joinColumns = @JoinColumn(name = "id_client"),
             inverseJoinColumns = @JoinColumn(name = "id_role")
     )
     private Set<RoleEntity> roles;

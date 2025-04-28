@@ -1,9 +1,10 @@
 package com.practice.authservice.controller;
 
 import com.practice.authservice.dto.AuthRequest;
+import com.practice.authservice.dto.RegRequest;
 import com.practice.authservice.jwt.JwtUtil;
 import com.practice.authservice.kafka.EmailVerificationProducer;
-import com.practice.authservice.service.impl.UserServiceImpl;
+import com.practice.authservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
     private final JwtUtil jwtUtil;
     private final EmailVerificationProducer emailVerificationProducer;
 
@@ -43,13 +46,17 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody AuthRequest request, HttpServletResponse response) {
-        userService.authenticate(request.username(), request.password());
-        String accessToken = jwtUtil.generateAccessToken(request.username());
-        String refreshToken = jwtUtil.generateRefreshToken(request.username());
+        userService.authenticate(request.email(), request.password());
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        String accessToken = jwtUtil.generateAccessToken(username);
+        String refreshToken = jwtUtil.generateRefreshToken(username);
 
         ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN, accessToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(ACCESS_TOKEN_EXPIRATION / 1000)
@@ -57,7 +64,7 @@ public class AuthController {
 
         ResponseCookie refreshCookie = ResponseCookie.from(REFRESH_TOKEN, refreshToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .sameSite("Lax")
                 .path("/api/auth/refresh")
                 .maxAge(REFRESH_TOKEN_EXPIRATION / 1000)
@@ -72,12 +79,13 @@ public class AuthController {
 
     @PostMapping("/register")
     @Transactional
-    public ResponseEntity<Map<String, String>> register(@RequestBody AuthRequest request, HttpServletResponse response) {
-        userService.register(request.username(), request.email(), request.password());
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegRequest request, HttpServletResponse response) {
+        userService.register(request.name(), request.email(), request.role(), request.password());
 
         emailVerificationProducer.sendEmailVerificationEvent(request.email());
 
-        return login(request, response);
+        AuthRequest authRequest = new AuthRequest(request.email(), request.password());
+        return login(authRequest, response);
     }
 
     @PostMapping("/refresh")
@@ -93,7 +101,7 @@ public class AuthController {
 
         ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN, newAccessToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(ACCESS_TOKEN_EXPIRATION / 1000)
