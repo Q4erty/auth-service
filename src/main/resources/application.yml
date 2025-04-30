@@ -17,13 +17,14 @@ spring:
 
   logging:
     level:
-      org.springframework.security: TRACE
+      org.springframework.web: DEBUG
+      org.springframework.security: DEBUG
+      com.practice.authservice: TRACE
+      org.hibernate.SQL: DEBUG
+      org.hibernate.type: TRACE
 
   kafka:
     bootstrap-servers: ${GOOGLE_SERVER}:9092
-
-server:
-  port: 8443
 
 jwt:
   secret-key: ${SECRET_KEY}
