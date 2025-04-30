@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -40,4 +41,16 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "id_role")
     )
     private Set<RoleEntity> roles;
+
+    @Column(name = "c_avatar_path")
+    private String avatarPath;
+
+    @Column(name = "c_is_blocked", nullable = false)
+    private boolean isBlocked = false;
+
+    @Column(name = "c_block_reason")
+    private String blockReason;
+
+    @Column(name = "c_blocked_at")
+    private LocalDateTime blockedAt;
 }

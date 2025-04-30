@@ -1,7 +1,6 @@
 package com.practice.authservice.controller;
 
 import com.practice.authservice.dto.AuthRequest;
-import com.practice.authservice.dto.RegRequest;
 import com.practice.authservice.jwt.JwtUtil;
 import com.practice.authservice.kafka.EmailVerificationProducer;
 import com.practice.authservice.service.UserService;
@@ -9,17 +8,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -55,7 +49,7 @@ public class AuthController {
         String refreshToken = jwtUtil.generateRefreshToken(username);
 
         ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN, accessToken)
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(false)
                 .sameSite("Lax")
                 .path("/")
@@ -63,7 +57,7 @@ public class AuthController {
                 .build();
 
         ResponseCookie refreshCookie = ResponseCookie.from(REFRESH_TOKEN, refreshToken)
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(false)
                 .sameSite("Lax")
                 .path("/api/auth/refresh")
@@ -77,14 +71,19 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("access_token", accessToken, "refresh_token", refreshToken));
     }
 
-    @PostMapping("/register")
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
-    public ResponseEntity<Map<String, String>> register(@RequestBody RegRequest request, HttpServletResponse response) {
-        userService.register(request.name(), request.email(), request.role(), request.password());
+    public ResponseEntity<Map<String, String>> register( @RequestPart String name,
+                                                         @RequestPart String email,
+                                                         @RequestPart String role,
+                                                         @RequestPart String password,
+                                                         @RequestPart(required = false) MultipartFile avatar,
+                                                         HttpServletResponse response) {
+        userService.register(name, email, role, password, avatar);
 
-        emailVerificationProducer.sendEmailVerificationEvent(request.email());
+        emailVerificationProducer.sendEmailVerificationEvent(email);
 
-        AuthRequest authRequest = new AuthRequest(request.email(), request.password());
+        AuthRequest authRequest = new AuthRequest(email, password);
         return login(authRequest, response);
     }
 
@@ -100,7 +99,7 @@ public class AuthController {
         String newAccessToken = jwtUtil.generateAccessToken(username);
 
         ResponseCookie accessCookie = ResponseCookie.from(ACCESS_TOKEN, newAccessToken)
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(false)
                 .sameSite("Lax")
                 .path("/")

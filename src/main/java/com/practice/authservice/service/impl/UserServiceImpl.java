@@ -9,13 +9,17 @@ import com.practice.authservice.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
@@ -28,12 +32,15 @@ public class UserServiceImpl implements UserService {
     private final RoleEntityRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final FileStorageService fileStorageService;
 
     @Transactional
-    public void register(String username, String email, String role, String password) {
+    public void register(String username, String email, String role, String password, MultipartFile avatar) {
         if (userRepository.existsByEmail(email)) {
-            throw new UsernameAlreadyExistsException("User already exists!");
+            throw new UsernameAlreadyExistsException("Email already exists!");
         }
+
+        String avatarPath = fileStorageService.storeFile(avatar);
 
         RoleEntity roleUser = roleRepository.findByAuthority(role)
                 .orElseGet(() -> {
@@ -48,6 +55,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setRoles(Set.of(roleUser));
+        user.setAvatarPath(avatarPath);
 
         userRepository.save(user);
     }
@@ -59,9 +67,26 @@ public class UserServiceImpl implements UserService {
                     new UsernamePasswordAuthenticationToken(email, password)
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new BadCredentialsException("Invalid username or password");
         }
     }
 
+    @Transactional
+    public void toggleUserBlock(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (!auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            throw new AccessDeniedException("Only admins can block users");
+        }
+
+        user.setBlocked(!user.isBlocked());
+        userRepository.save(user);
+    }
+
 }
+
+

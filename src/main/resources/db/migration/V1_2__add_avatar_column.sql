@@ -1,0 +1,1 @@
+ALTER TABLE s_auth.t_client ADD COLUMN c_avatar_path VARCHAR DEFAULT 'default-avatar.png';
