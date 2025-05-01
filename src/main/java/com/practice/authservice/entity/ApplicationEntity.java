@@ -26,8 +26,10 @@ public class ApplicationEntity {
     @JoinColumn(name = "freelancer_id")
     private UserEntity freelancer;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.ORDINAL)
     private ApplicationStatus status;
+
     private String proposal;
+
     private LocalDateTime createdAt;
 }

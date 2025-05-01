@@ -46,4 +46,14 @@ public class ApplicationController {
     ) {
         return ResponseEntity.ok(orderService.acceptApplication(id, principal.getName()));
     }
+
+    @PatchMapping("/{id}/decline")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<?> declineApplication(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        applicationService.declineApplication(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
 }

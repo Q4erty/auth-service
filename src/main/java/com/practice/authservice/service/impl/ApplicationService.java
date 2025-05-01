@@ -6,6 +6,7 @@ import com.practice.authservice.dto.ApplicationStatus;
 import com.practice.authservice.entity.ApplicationEntity;
 import com.practice.authservice.entity.OrderEntity;
 import com.practice.authservice.entity.UserEntity;
+import com.practice.authservice.exception.ConflictException;
 import com.practice.authservice.exception.NotFoundException;
 import com.practice.authservice.repository.ApplicationRepository;
 import com.practice.authservice.repository.OrderRepository;
@@ -54,30 +55,23 @@ public class ApplicationService {
         applicationRepository.save(application);
     }
 
-//    @Transactional
-//    public ApplicationDto acceptApplication(Long applicationId, String userEmail) {
-//        ApplicationEntity application = applicationRepository.findById(applicationId)
-//                .orElseThrow(() -> new NotFoundException("Application not found"));
-//
-//        UserEntity client = userRepository.findByEmail(userEmail)
-//                .orElseThrow(() -> new NotFoundException("User not found"));
-//
-//        if (!application.getOrder().getClient().getId().equals(client.getId())) {
-//            throw new AccessDeniedException("Only order owner can accept applications");
-//        }
-//
-//        application.setStatus(ApplicationStatus.ACCEPTED);
-//
-//        OrderEntity order = application.getOrder();
-//        order.setFreelancer(application.getFreelancer());
-//        orderRepository.save(order);
-//
-//        applicationRepository.findByOrderIdAndStatus(order.getId(), ApplicationStatus.PENDING)
-//                .forEach(otherApplication -> {
-//                    otherApplication.setStatus(ApplicationStatus.CANCELLED);
-//                    applicationRepository.save(otherApplication);
-//                });
-//
-//        return ApplicationDto.fromEntity(applicationRepository.save(application));
-//    }
+    @Transactional
+    public void declineApplication(Long applicationId, String clientEmail) {
+        ApplicationEntity application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new NotFoundException("Application not found"));
+
+        UserEntity client = userRepository.findByEmail(clientEmail)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        if (!application.getOrder().getClient().equals(client)) {
+            throw new AccessDeniedException("Only order owner can decline applications");
+        }
+
+        if (application.getStatus() != ApplicationStatus.PENDING) {
+            throw new ConflictException("Application is not in pending state");
+        }
+
+        application.setStatus(ApplicationStatus.DECLINED);
+        applicationRepository.save(application);
+    }
 }
