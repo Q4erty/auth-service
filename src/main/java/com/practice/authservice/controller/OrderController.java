@@ -41,4 +41,24 @@ public class OrderController {
         orderService.deleteOrder(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/complete")
+    @PreAuthorize("hasAnyRole('CLIENT', 'FREELANCER')")
+    public ResponseEntity<?> completeOrder(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        orderService.completeOrder(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/cancel-confirmation")
+    @PreAuthorize("hasAnyRole('CLIENT', 'FREELANCER')")
+    public ResponseEntity<?> cancelConfirmation(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        orderService.cancelConfirmation(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
 }

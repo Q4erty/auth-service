@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -53,4 +54,10 @@ public class UserEntity {
 
     @Column(name = "c_blocked_at")
     private LocalDateTime blockedAt;
+
+    @Column(name = "average_rating", columnDefinition = "numeric(3,2) default 0.00")
+    private BigDecimal averageRating = BigDecimal.ZERO;
+
+    @Column(name = "rating_count", columnDefinition = "int default 0")
+    private int ratingCount = 0;
 }

@@ -1,0 +1,3 @@
+ALTER TABLE s_auth.t_order
+    ADD COLUMN client_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN freelancer_confirmed BOOLEAN NOT NULL DEFAULT FALSE;

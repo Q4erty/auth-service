@@ -7,7 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "t_application", schema = "s_main")
+@Table(name = "t_application", schema = "s_auth")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,6 +26,7 @@ public class ApplicationEntity {
     @JoinColumn(name = "freelancer_id")
     private UserEntity freelancer;
 
+    @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
     private String proposal;
     private LocalDateTime createdAt;

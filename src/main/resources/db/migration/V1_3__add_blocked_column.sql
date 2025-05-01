@@ -1,1 +1,4 @@
-ALTER TABLE s_auth.t_client ADD COLUMN c_is_blocked BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE s_auth.t_client
+    ADD COLUMN c_is_blocked BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN c_block_reason TEXT DEFAULT NULL,
+    ADD COLUMN c_blocked_at TIMESTAMP DEFAULT NULL;

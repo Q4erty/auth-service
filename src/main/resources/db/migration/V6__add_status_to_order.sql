@@ -1,0 +1,2 @@
+ALTER TABLE s_auth.t_order
+    ADD COLUMN status VARCHAR(50) DEFAULT 'ACTIVE';

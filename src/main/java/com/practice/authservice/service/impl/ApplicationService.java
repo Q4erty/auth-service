@@ -54,30 +54,30 @@ public class ApplicationService {
         applicationRepository.save(application);
     }
 
-    @Transactional
-    public ApplicationDto acceptApplication(Long applicationId, String userEmail) {
-        ApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new NotFoundException("Application not found"));
-
-        UserEntity client = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        if (!application.getOrder().getClient().getId().equals(client.getId())) {
-            throw new AccessDeniedException("Only order owner can accept applications");
-        }
-
-        application.setStatus(ApplicationStatus.ACCEPTED);
-
-        OrderEntity order = application.getOrder();
-        order.setFreelancer(application.getFreelancer());
-        orderRepository.save(order);
-
-        applicationRepository.findByOrderIdAndStatus(order.getId(), ApplicationStatus.PENDING)
-                .forEach(otherApplication -> {
-                    otherApplication.setStatus(ApplicationStatus.CANCELLED);
-                    applicationRepository.save(otherApplication);
-                });
-
-        return ApplicationDto.fromEntity(applicationRepository.save(application));
-    }
+//    @Transactional
+//    public ApplicationDto acceptApplication(Long applicationId, String userEmail) {
+//        ApplicationEntity application = applicationRepository.findById(applicationId)
+//                .orElseThrow(() -> new NotFoundException("Application not found"));
+//
+//        UserEntity client = userRepository.findByEmail(userEmail)
+//                .orElseThrow(() -> new NotFoundException("User not found"));
+//
+//        if (!application.getOrder().getClient().getId().equals(client.getId())) {
+//            throw new AccessDeniedException("Only order owner can accept applications");
+//        }
+//
+//        application.setStatus(ApplicationStatus.ACCEPTED);
+//
+//        OrderEntity order = application.getOrder();
+//        order.setFreelancer(application.getFreelancer());
+//        orderRepository.save(order);
+//
+//        applicationRepository.findByOrderIdAndStatus(order.getId(), ApplicationStatus.PENDING)
+//                .forEach(otherApplication -> {
+//                    otherApplication.setStatus(ApplicationStatus.CANCELLED);
+//                    applicationRepository.save(otherApplication);
+//                });
+//
+//        return ApplicationDto.fromEntity(applicationRepository.save(application));
+//    }
 }
