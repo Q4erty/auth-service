@@ -1,5 +1,6 @@
 package com.practice.authservice.service.impl;
 
+import com.practice.authservice.dto.UserProfileDto;
 import com.practice.authservice.exception.UsernameAlreadyExistsException;
 import com.practice.authservice.entity.RoleEntity;
 import com.practice.authservice.entity.UserEntity;
@@ -21,6 +22,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.management.relation.RoleNotFoundException;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -35,7 +38,7 @@ public class UserServiceImpl implements UserService {
     private final FileStorageService fileStorageService;
 
     @Transactional
-    public void register(String username, String email, String role, String password, MultipartFile avatar) {
+    public void register(String username, String email, String role, String password, MultipartFile avatar) throws RoleNotFoundException {
         if (userRepository.existsByEmail(email)) {
             throw new UsernameAlreadyExistsException("Email already exists!");
         }
@@ -43,12 +46,7 @@ public class UserServiceImpl implements UserService {
         String avatarPath = fileStorageService.storeFile(avatar);
 
         RoleEntity roleUser = roleRepository.findByAuthority(role)
-                .orElseGet(() -> {
-                    log.warn("Role not found, creating a new one.");
-                    RoleEntity newRole = new RoleEntity();
-                    newRole.setAuthority("ROLE_CLIENT");
-                    return roleRepository.save(newRole);
-                });
+                .orElseThrow(() -> new RoleNotFoundException("Role not found!"));
 
         UserEntity user = new UserEntity();
         user.setUsername(username);
@@ -85,6 +83,21 @@ public class UserServiceImpl implements UserService {
 
         user.setBlocked(!user.isBlocked());
         userRepository.save(user);
+    }
+
+    @Override
+    public UserProfileDto getUserProfile(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return UserProfileDto.fromEntity(user);
+    }
+
+    @Override
+    @Transactional
+    public List<UserProfileDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(UserProfileDto::fromEntity)
+                .toList();
     }
 
 }

@@ -1,9 +1,9 @@
 spring:
 
   datasource:
-    password: ${DB_PASSWORD_17}
-    username: ${DB_USERNAME_17}
-    url: ${DB_URL_17}
+    password: nurtas #${DB_PASSWORD_17}
+    username: postgres #${DB_USERNAME_17}
+    url: jdbc:postgresql://localhost:5433/postgres #${DB_URL_17}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -24,16 +24,19 @@ spring:
       org.hibernate.type: TRACE
 
   kafka:
-    bootstrap-servers: ${GOOGLE_SERVER}:9092
+    bootstrap-servers: 34.118.71.122:9092 #${GOOGLE_SERVER}:9092
 
   servlet:
     multipart:
       enabled: true
-      max-file-size: 150MB
-      max-request-size: 150MB
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+server:
+  port: 8000
 
 jwt:
-  secret-key: ${SECRET_KEY}
+  secret-key: 40e491e6c9c19cdf1c4305b430f2759d67dfbd3ea10fe9e0af7e2b610a873d58a027773dcd6eb61dfa2328d1478714551aa265601ba85385a8f4a2547418528f908487ff6e42769ec01560c6213e6b5677984a393ed9278e75496018cdec12bf3d5af86abf5908bd5f4a12991cb2d0f04bf9f2a62e8f45d1a9402384cf191dcc5b6d9de7a8b5961b78757b3919e3f1ba2a45f43dc27d7762772024e8933992d35cf482e275d04aaae7d300bb95bf3df2eee6c2470e5ca30bbf4c48abc98de22c59669e78127f693bca249e0788b9c38bdcc36e467c985be53706d35c083820e8db290f59d01dcf263028b955574ad65b8bd9a1f5b9c8139b96cb6ce7b80d9cd8 #${SECRET_KEY}
   access-token-expiration: 900000
   refresh-token-expiration: 2592000000
 
@@ -43,3 +46,4 @@ cookie:
 
 file:
   upload-dir: ./uploads
+  chat-upload-dir: ./chat-uploads

@@ -32,6 +32,13 @@ public class OrderService {
     private final CategoryRepository categoryRepository;
     private final UserEntityRepository userRepository;
 
+    public List<OrderDto> getUserOrders(String email) {
+        return orderRepository.findByClientEmail(email)
+                .stream()
+                .map(OrderDto::fromEntity)
+                .toList();
+    }
+
     public Page<OrderDto> getAllOrders(Long categoryId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 

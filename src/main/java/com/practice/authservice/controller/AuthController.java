@@ -1,8 +1,11 @@
 package com.practice.authservice.controller;
 
 import com.practice.authservice.dto.AuthRequest;
+import com.practice.authservice.dto.UserProfileDto;
+import com.practice.authservice.entity.UserEntity;
 import com.practice.authservice.jwt.JwtUtil;
 import com.practice.authservice.kafka.EmailVerificationProducer;
+import com.practice.authservice.repository.UserEntityRepository;
 import com.practice.authservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.management.relation.RoleNotFoundException;
 import java.util.Map;
 
 @RestController
@@ -25,6 +29,7 @@ public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final EmailVerificationProducer emailVerificationProducer;
+    private final UserEntityRepository userRepository;
 
     @Value("${jwt.access-token-expiration}")
     private long ACCESS_TOKEN_EXPIRATION;
@@ -39,7 +44,7 @@ public class AuthController {
     private String REFRESH_TOKEN;
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody AuthRequest request, HttpServletResponse response) {
+    public ResponseEntity<UserProfileDto> login(@RequestBody AuthRequest request, HttpServletResponse response) {
         userService.authenticate(request.email(), request.password());
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -68,17 +73,20 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        return ResponseEntity.ok(Map.of("access_token", accessToken, "refresh_token", refreshToken));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findByEmail(email).orElseThrow();
+        Long userId = user.getId();
+        return ResponseEntity.ok(userService.getUserProfile(userId));
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
-    public ResponseEntity<Map<String, String>> register( @RequestPart String name,
-                                                         @RequestPart String email,
-                                                         @RequestPart String role,
-                                                         @RequestPart String password,
-                                                         @RequestPart(required = false) MultipartFile avatar,
-                                                         HttpServletResponse response) {
+    public ResponseEntity<UserProfileDto> register(@RequestPart String name,
+                                                   @RequestPart String email,
+                                                   @RequestPart String role,
+                                                   @RequestPart String password,
+                                                   @RequestPart(required = false) MultipartFile avatar,
+                                                   HttpServletResponse response) throws RoleNotFoundException {
         userService.register(name, email, role, password, avatar);
 
         emailVerificationProducer.sendEmailVerificationEvent(email);

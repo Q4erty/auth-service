@@ -13,7 +13,10 @@ public record OrderDto(
         LocalDate deadline,
         Long categoryId,
         Long clientId,
-        Long freelancerId
+        Long freelancerId,
+        OrderStatus status,
+        boolean clientConfirmed,
+        boolean freelancerConfirmed
 ) {
     public static OrderDto fromEntity(OrderEntity entity) {
         return new OrderDto(
@@ -24,7 +27,10 @@ public record OrderDto(
                 entity.getDeadline(),
                 entity.getCategory().getId(),
                 entity.getClient().getId(),
-                entity.getFreelancer() != null ? entity.getFreelancer().getId() : null
+                entity.getFreelancer() != null ? entity.getFreelancer().getId() : null,
+                entity.getStatus(),
+                entity.isClientConfirmed(),
+                entity.isFreelancerConfirmed()
         );
     }
 }

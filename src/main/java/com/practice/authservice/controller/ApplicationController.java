@@ -2,6 +2,7 @@ package com.practice.authservice.controller;
 
 import com.practice.authservice.dto.ApplicationCreateRequest;
 import com.practice.authservice.dto.ApplicationDto;
+import com.practice.authservice.dto.ApplicationDtoForOnce;
 import com.practice.authservice.dto.OrderDto;
 import com.practice.authservice.service.impl.ApplicationService;
 import com.practice.authservice.service.impl.OrderService;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -18,6 +20,20 @@ import java.security.Principal;
 public class ApplicationController {
     private final ApplicationService applicationService;
     private final OrderService orderService;
+
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<List<ApplicationDtoForOnce>> getApplicationsForOrder(@PathVariable Long orderId) {
+        return ResponseEntity.ok(applicationService.getApplicationsByOrder(orderId));
+    }
+
+    @GetMapping("/freelancer/{freelancerId}")
+    public ResponseEntity<List<ApplicationDto>> getFreelancerApplications(
+            @PathVariable Long freelancerId
+    ) {
+        return ResponseEntity.ok(
+                applicationService.getApplicationsByFreelancer(freelancerId)
+        );
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('FREELANCER')")

@@ -1,8 +1,6 @@
 package com.practice.authservice.service.impl;
 
-import com.practice.authservice.dto.ApplicationCreateRequest;
-import com.practice.authservice.dto.ApplicationDto;
-import com.practice.authservice.dto.ApplicationStatus;
+import com.practice.authservice.dto.*;
 import com.practice.authservice.entity.ApplicationEntity;
 import com.practice.authservice.entity.OrderEntity;
 import com.practice.authservice.entity.UserEntity;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +23,13 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final OrderRepository orderRepository;
     private final UserEntityRepository userRepository;
+
+    @Transactional(readOnly = true)
+    public List<ApplicationDtoForOnce> getApplicationsByOrder(Long orderId) {
+        return applicationRepository.findByOrderId(orderId).stream()
+                .map(this::convertToDto)
+                .toList();
+    }
 
     public ApplicationDto createApplication(ApplicationCreateRequest request, String userEmail) {
         UserEntity freelancer = userRepository.findByEmail(userEmail)
@@ -73,5 +79,37 @@ public class ApplicationService {
 
         application.setStatus(ApplicationStatus.DECLINED);
         applicationRepository.save(application);
+    }
+
+    public List<ApplicationDto> getApplicationsByFreelancer(Long freelancerId) {
+        return applicationRepository.findByFreelancerId(freelancerId).stream()
+                .map(ApplicationDto::fromEntity)
+                .toList();
+    }
+
+    private ApplicationDtoForOnce convertToDto(ApplicationEntity entity) {
+        return new ApplicationDtoForOnce(
+                entity.getId(),
+                entity.getProposal(),
+                entity.getStatus().name(),
+                entity.getCreatedAt(),
+                convertUserToDto(entity.getFreelancer())
+        );
+    }
+
+    private UserProfileDto convertUserToDto(UserEntity user) {
+        return new UserProfileDto(
+                user.getId(),
+                user.getUsername(),
+                user.getRoles().stream()
+                        .findFirst()
+                        .map(r -> r.getAuthority().replace("ROLE_", ""))
+                        .orElse("USER"),
+                user.getEmail(),
+                user.getAvatarPath(),
+                user.getAverageRating(),
+                user.getRatingCount(),
+                user.isBlocked()
+                );
     }
 }

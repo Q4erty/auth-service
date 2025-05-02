@@ -10,12 +10,19 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
+
+    @GetMapping("/my")
+    @PreAuthorize("hasAuthority('ROLE_CLIENT')")
+    public ResponseEntity<List<OrderDto>> getMyOrders(Principal principal) {
+        return ResponseEntity.ok(orderService.getUserOrders(principal.getName()));
+    }
 
     @GetMapping
     public ResponseEntity<Page<OrderDto>> getAllOrders(
